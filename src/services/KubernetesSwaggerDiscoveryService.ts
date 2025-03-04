@@ -86,7 +86,7 @@ class KubernetesSwaggerDiscoveryService{
         if(!service) return
         const namespace = ingress?.metadata?.namespace || "default"
         const realPath = path.path
-        fastifyApp.log.info("Working on namespace " + namespace + " and path " + realPath)
+        fastifyApp.log.debug("Working on namespace " + namespace + " and path " + realPath)
         if(path.pathType == "Prefix"){
             const associatedService = await this.k8sApiCore.readNamespacedService({ name: service, namespace  });
             
@@ -98,10 +98,10 @@ class KubernetesSwaggerDiscoveryService{
                 .map(([key, value]) => `${key}=${value}`)
                 .join(",");
             
-            fastifyApp.log.info(`Looking for pods for service ${service} in namespace ${namespace} with selector ${labelSelector}`);
+            fastifyApp.log.debug(`Looking for pods for service ${service} in namespace ${namespace} with selector ${labelSelector}`);
             const pods = await this.k8sApiCore.listNamespacedPod({ namespace, labelSelector}  );
 
-            fastifyApp.log.info(`Found ${pods.items.length} pods for service ${service} in namespace ${namespace}`);
+            fastifyApp.log.debug(`Found ${pods.items.length} pods for service ${service} in namespace ${namespace}`);
             if(pods.items.length == 0) return;
 
             const swaggerOut = []
