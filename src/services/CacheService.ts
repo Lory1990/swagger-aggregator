@@ -1,7 +1,6 @@
 
 import NodeCache from "node-cache";
 import redis, { RedisClientType } from 'redis';
-import fs from 'fs';
 
 const globalCache = new NodeCache();
 
@@ -29,7 +28,15 @@ class CacheService{
         if(this.redisClient){
             return (await this.redisClient.get(this.getCacheKey())) as string | undefined
         }else{
-            await globalCache.get(this.getCacheKey())
+            return await globalCache.get(this.getCacheKey())
+        }
+    }
+
+    async deleteAllSwagger(){
+        if(this.redisClient){
+            await this.redisClient.del(this.getCacheKey())
+        }else{
+            await globalCache.del(this.getCacheKey())
         }
     }
 
