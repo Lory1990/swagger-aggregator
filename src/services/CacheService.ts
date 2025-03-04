@@ -8,6 +8,7 @@ const globalCache = new NodeCache();
 class CacheService{
 
     redisClient : RedisClientType | undefined
+    cacheExpiration = parseInt(process.env.CACHE_TIME_MS || "3600000", 10)
 
     constructor(){
         if(process.env.REDIS_URL){
@@ -17,11 +18,10 @@ class CacheService{
 
 
     async saveAllSwaggers(allSwaggerData : string) : Promise<void>{
-        await fs.writeFileSync('file.txt', allSwaggerData)
         if(this.redisClient){
-            await this.redisClient.set(this.getCacheKey(), allSwaggerData);
+            await this.redisClient.set(this.getCacheKey(), allSwaggerData, { EX: this.cacheExpiration });
         }else{
-            await globalCache.set(this.getCacheKey(), allSwaggerData, 1000000)
+            await globalCache.set(this.getCacheKey(), allSwaggerData, this.cacheExpiration)
         }
     }
 

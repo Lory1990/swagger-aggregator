@@ -1,6 +1,7 @@
 import * as k8s from '@kubernetes/client-node'
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 import CacheService from './CacheService.js';
+import { fastifyApp } from '../index.js';
 
 class KubernetesSwaggerDiscoveryService{
 
@@ -17,7 +18,7 @@ class KubernetesSwaggerDiscoveryService{
 
 
     async discovery() : Promise<any>{
-        console.log("Start discovery service");
+        fastifyApp.log.info("Starting discovery service");
         try {
             let ingresses : k8s.V1Ingress[]  = []
             if(process.env.NAMESPACES){
@@ -28,9 +29,8 @@ class KubernetesSwaggerDiscoveryService{
             }else{
                 ingresses = (await this.k8sApiNetworking.listIngressForAllNamespaces()).items;
             }
-            console.log("== Ingresses ==")
-            console.log(ingresses.map((ingress : any) => ingress.metadata.name));
-            console.log("================")
+
+            fastifyApp.log.info(`Found ${ingresses.length} ingresses`);
 
             let allSwaggers : any[] = []
             for (const ingress of ingresses) {
@@ -45,7 +45,7 @@ class KubernetesSwaggerDiscoveryService{
                             if(!swagger) continue
                             allSwaggers = [...allSwaggers, ...swagger]
                         }catch(err){
-                            console.log("Error", err)
+                            fastifyApp.log.error(err)
                         }
                     }
                 }
@@ -73,7 +73,6 @@ class KubernetesSwaggerDiscoveryService{
                 finalSwagger.components.schemas = {...finalSwagger.components.schemas, ...swagger.components.schemas}
             }
             
-            console.log("Saving all swaggers", finalSwagger)
             this.cacheService.saveAllSwaggers(JSON.stringify(finalSwagger))
             return finalSwagger;
         } catch (err) {
@@ -87,7 +86,7 @@ class KubernetesSwaggerDiscoveryService{
         if(!service) return
         const namespace = ingress?.metadata?.namespace || "default"
         const realPath = path.path
-        console.log("Working on namespace " + namespace + " and path " + realPath)
+        fastifyApp.log.info("Working on namespace " + namespace + " and path " + realPath)
         if(path.pathType == "Prefix"){
             const associatedService = await this.k8sApiCore.readNamespacedService({ name: service, namespace  });
             
@@ -99,28 +98,42 @@ class KubernetesSwaggerDiscoveryService{
                 .map(([key, value]) => `${key}=${value}`)
                 .join(",");
             
-            console.log("Selector", labelSelector, "and namespace", namespace)  
+            fastifyApp.log.info(`Looking for pods for service ${service} in namespace ${namespace} with selector ${labelSelector}`);
             const pods = await this.k8sApiCore.listNamespacedPod({ namespace, labelSelector}  );
 
-            console.log("Pods associati:", pods.items.map(pod => pod.metadata?.name));
+            fastifyApp.log.info(`Found ${pods.items.length} pods for service ${service} in namespace ${namespace}`);
             if(pods.items.length == 0) return;
 
             const swaggerOut = []
+            const documentationUrls : string[] = (process.env.DOCUMENTATION_URLS || "/documentaion/json").split(",") 
             //Ok i have a single pod so i can get the swagger
             for(const port of associatedService.spec?.ports || []){
-                let url = `http://${associatedService.metadata?.name}:${port}/documentation/json`
-                if(process.env.EXTERNAL_ACCESS){
-                    url = `${process.env.EXTERNAL_ACCESS}${realPath}/documentation/json`
-                }
-                try{
-                    const result = await axios.get(url)
-                    const swagger = result.data
-                    swagger.prefix = realPath
-                    //console.log("Swagger", swagger)
-                    swaggerOut.push(swagger)
-                }catch(err){
-                    
-                    console.log("Error", err)
+                for(const documentationUrl of documentationUrls){
+                    let url = `http://${associatedService.metadata?.name}:${port}`
+                    if(process.env.EXTERNAL_ACCESS){
+                        url = `${process.env.EXTERNAL_ACCESS}${realPath}`
+                    }
+                    url += documentationUrl
+                    try{
+                        const result = await axios.get(url)
+                        const swagger = result.data
+                        swagger.prefix = realPath
+                        swaggerOut.push(swagger)
+                    }catch(err){
+                        if(err instanceof AxiosError){
+                            if(err.status == 404){
+                                fastifyApp.log.error("Swagger not found at " + url)
+                            }else if(err.status == 403){
+                                fastifyApp.log.error("Swagger forbidden access at " + url)
+                            }else if(err.status == 401){
+                                fastifyApp.log.error("Swagger unauthorized access at " + url)
+                            }else{
+                                fastifyApp.log.error("Swagger error at " + url + " with status: " + err.status, err)
+                            }
+                        }else{
+                            fastifyApp.log.error("Swagger error at " + url, err)
+                        }
+                    }
                 }
             }
 

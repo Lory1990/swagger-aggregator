@@ -9,24 +9,24 @@ import KubernetesSwaggerDiscoveryService from "./services/KubernetesSwaggerDisco
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-export const fastify = Fastify({
+export const fastifyApp = Fastify({
     logger: true,
   });
   
   export async function build() {
     const startPlugins = performance.now();
-    await fastify.register(AutoLoad, {
+    await fastifyApp.register(AutoLoad, {
       dir: path.join(__dirname, 'plugins'),
     });
-    fastify.log.info(`Plugins ${(performance.now() - startPlugins).toFixed(2)} ms`);
+    fastifyApp.log.info(`Plugins ${(performance.now() - startPlugins).toFixed(2)} ms`);
   
     const startControllers = performance.now();
-    await fastify.register(AutoLoad, {
+    await fastifyApp.register(AutoLoad, {
       dir: path.join(__dirname, 'controller'),
     });
-    fastify.log.info(`Controllers ${(performance.now() - startControllers).toFixed(2)} ms`);
+    fastifyApp.log.info(`Controllers ${(performance.now() - startControllers).toFixed(2)} ms`);
   
-    return fastify;
+    return fastifyApp;
   }
 
   const start = async () => {
