@@ -47,8 +47,9 @@ export const fastifyApp = Fastify({
   
     await fastify.listen({
       host: '0.0.0.0',
-      port: 3000,
+      port: parseInt(process.env.HTTP_PORT || "3000", 10),
     });
+    fastify.log.info(`Server listening on ${fastify.server.address()}`);
 
     new KubernetesSwaggerDiscoveryService().discovery();
   };

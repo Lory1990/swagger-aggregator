@@ -76,7 +76,7 @@ class KubernetesSwaggerDiscoveryService{
             this.cacheService.saveAllSwaggers(JSON.stringify(finalSwagger))
             return finalSwagger;
         } catch (err) {
-            console.error('Error:', err);
+            fastifyApp.log.error(err)
         }
     }
 
