@@ -73,7 +73,7 @@ class KubernetesSwaggerDiscoveryService{
                 finalSwagger.components.schemas = {...finalSwagger.components.schemas, ...swagger.components.schemas}
             }
             
-            fastifyApp.log.info("Discovery finisched, saving swaggger with " + Object.keys(finalSwagger.components.schemas).length + " schemas and " + Object.keys(finalSwagger.paths).length + " paths")
+            fastifyApp.log.info("Discovery finished, saving swaggger with " + Object.keys(finalSwagger.components.schemas).length + " schemas and " + Object.keys(finalSwagger.paths).length + " paths")
             this.cacheService.saveAllSwaggers(JSON.stringify(finalSwagger))
             return finalSwagger;
         } catch (err) {
@@ -87,7 +87,7 @@ class KubernetesSwaggerDiscoveryService{
         if(!service) return
         const namespace = ingress?.metadata?.namespace || "default"
         const realPath = path.path
-        fastifyApp.log.debug("Working on namespace " + namespace + " and path " + realPath)
+        fastifyApp.log.info("Working on namespace " + namespace + " and path " + realPath)
         if(path.pathType == "Prefix"){
             const associatedService = await this.k8sApiCore.readNamespacedService({ name: service, namespace  });
             
@@ -140,7 +140,7 @@ class KubernetesSwaggerDiscoveryService{
 
             return swaggerOut;
         }else{
-            console.log("Path type not supported " + path.pathType)
+            fastifyApp.log.info("Path type not supported " + path.pathType)
             throw new Error("Path type not supported " + path.pathType)
         }
 
