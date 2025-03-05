@@ -15,6 +15,7 @@ export const fastifyApp = Fastify({
   
   export async function build() {
     const startPlugins = performance.now();
+    
     await fastifyApp.register(AutoLoad, {
       dir: path.join(__dirname, 'plugins'),
     });

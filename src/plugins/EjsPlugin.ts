@@ -1,21 +1,24 @@
 import fastifyPlugin from 'fastify-plugin';
 import { FastifyInstance } from 'fastify';
-import fastifyStatic from '@fastify/static';
-import { join } from 'path';
+import path from 'path'
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
+import fastifyView from '@fastify/view';
+import * as ejs from 'ejs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 
-
 export default fastifyPlugin(async (fastify: FastifyInstance) => {
-        //console.log("Root is", join(__dirname, '../public'));
         
-        fastify.register(fastifyStatic, {
-            root: join(__dirname, '../public'),
-            prefix: '/', // Accesso via /docs/
-        });
+    // Imposta EJS come motore di template
+    fastify.register(fastifyView, {
+      engine: {
+        ejs: ejs
+      },
+      templates: path.join(__dirname, '../public')
+    });
+        
 	},
 );
