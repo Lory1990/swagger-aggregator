@@ -109,7 +109,7 @@ class KubernetesSwaggerDiscoveryService{
             //Ok i have a single pod so i can get the swagger
             for(const port of associatedService.spec?.ports || []){
                 for(const documentationUrl of documentationUrls){
-                    let url = `http://${associatedService.metadata?.name}:${port}`
+                    let url = `http://${associatedService.metadata?.name}:${port.port}`
                     if(process.env.EXTERNAL_ACCESS){
                         url = `${process.env.EXTERNAL_ACCESS}${realPath}`
                     }
