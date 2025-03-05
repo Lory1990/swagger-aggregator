@@ -14,7 +14,7 @@ export default fastifyPlugin(async (fastify: FastifyInstance) => {
         const namespaces = process.env.NAMESPACES ? process.env.NAMESPACES.split(",") : undefined
 
         const date = new Date();
-
+        fastifyApp.log.info("Start watching pods");
         watch.watch("/api/v1/pods", { watch: true, resourceVersion: "0" },
                 (type, pod) => {
                   if(Date.now() - date.getTime() < 30000) return
