@@ -1,9 +1,7 @@
 
 import NodeCache from "node-cache";
 import redis, { RedisClientType } from 'redis';
-import { fastifyApp } from "../index.js";
-
-const globalCache = new NodeCache();
+import { fastifyApp, inMemoryCache } from "../index.js";
 
 class CacheService{
 
@@ -22,7 +20,7 @@ class CacheService{
             if(this.redisClient){
                 await this.redisClient.set(this.getCacheKey(), allSwaggerData, { EX: this.cacheExpiration });
             }else{
-                await globalCache.set(this.getCacheKey(), allSwaggerData, this.cacheExpiration)
+                await inMemoryCache.set(this.getCacheKey(), allSwaggerData, this.cacheExpiration)
             }
         }catch(err){
             fastifyApp.log.error(err)
@@ -34,7 +32,7 @@ class CacheService{
             if(this.redisClient){
                 return (await this.redisClient.get(this.getCacheKey())) as string | undefined
             }else{
-                return await globalCache.get(this.getCacheKey())
+                return await inMemoryCache.get(this.getCacheKey())
             }
         }catch(err){
             fastifyApp.log.error(err)
@@ -46,7 +44,7 @@ class CacheService{
             if(this.redisClient){
                 await this.redisClient.del(this.getCacheKey())
             }else{
-                await globalCache.del(this.getCacheKey())
+                await inMemoryCache.del(this.getCacheKey())
             }
         }catch(err){
             fastifyApp.log.error(err)

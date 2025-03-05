@@ -5,9 +5,12 @@ import dotenv from 'dotenv'
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
 import KubernetesSwaggerDiscoveryService from "./services/KubernetesSwaggerDiscoveryService.js";
+import NodeCache from 'node-cache';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
+
+export const inMemoryCache = new NodeCache({ stdTTL: 180, checkperiod: 60 }); // TTL di 3 minuti
 
 export const fastifyApp = Fastify({
     logger: true,
