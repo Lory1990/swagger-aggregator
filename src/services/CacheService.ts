@@ -1,6 +1,7 @@
 
 import NodeCache from "node-cache";
 import redis, { RedisClientType } from 'redis';
+import { fastifyApp } from "../index.js";
 
 const globalCache = new NodeCache();
 
@@ -17,26 +18,38 @@ class CacheService{
 
 
     async saveAllSwaggers(allSwaggerData : string) : Promise<void>{
-        if(this.redisClient){
-            await this.redisClient.set(this.getCacheKey(), allSwaggerData, { EX: this.cacheExpiration });
-        }else{
-            await globalCache.set(this.getCacheKey(), allSwaggerData, this.cacheExpiration)
+        try{
+            if(this.redisClient){
+                await this.redisClient.set(this.getCacheKey(), allSwaggerData, { EX: this.cacheExpiration });
+            }else{
+                await globalCache.set(this.getCacheKey(), allSwaggerData, this.cacheExpiration)
+            }
+        }catch(err){
+            fastifyApp.log.error(err)
         }
     }
 
     async getAllSwagger() : Promise<string | undefined>{
-        if(this.redisClient){
-            return (await this.redisClient.get(this.getCacheKey())) as string | undefined
-        }else{
-            return await globalCache.get(this.getCacheKey())
+        try{
+            if(this.redisClient){
+                return (await this.redisClient.get(this.getCacheKey())) as string | undefined
+            }else{
+                return await globalCache.get(this.getCacheKey())
+            }
+        }catch(err){
+            fastifyApp.log.error(err)
         }
     }
 
     async deleteAllSwagger(){
-        if(this.redisClient){
-            await this.redisClient.del(this.getCacheKey())
-        }else{
-            await globalCache.del(this.getCacheKey())
+        try{
+            if(this.redisClient){
+                await this.redisClient.del(this.getCacheKey())
+            }else{
+                await globalCache.del(this.getCacheKey())
+            }
+        }catch(err){
+            fastifyApp.log.error(err)
         }
     }
 
