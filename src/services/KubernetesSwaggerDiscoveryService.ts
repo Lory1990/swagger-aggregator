@@ -31,6 +31,7 @@ class KubernetesSwaggerDiscoveryService{
             }
 
             fastifyApp.log.info(`Found ${ingresses.length} ingresses`);
+            const pathsToNotDiscover = process.env.PATHS_TO_NOT_DISCOVER ? process.env.PATHS_TO_NOT_DISCOVER.split(",") : []
 
             let allSwaggers : any[] = []
             for (const ingress of ingresses) {
@@ -40,6 +41,7 @@ class KubernetesSwaggerDiscoveryService{
                     if (!rule.http?.paths) continue;
             
                     for (const path of rule.http.paths) {
+                        if(path.path && pathsToNotDiscover.includes(path.path)) continue
                         try{
                             const swagger = await this.getSwagger(ingress, path)
                             if(!swagger) continue
@@ -106,7 +108,7 @@ class KubernetesSwaggerDiscoveryService{
             if(pods.items.length == 0) return;
 
             const swaggerOut = []
-            const documentationUrls : string[] = (process.env.DOCUMENTATION_URLS || "/documentaion/json").split(",") 
+            const documentationUrls : string[] = (process.env.DOCUMENTATION_URLS || "/documentation/json").split(",") 
             //Ok i have a single pod so i can get the swagger
             for(const port of associatedService.spec?.ports || []){
                 for(const documentationUrl of documentationUrls){
