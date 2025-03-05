@@ -73,6 +73,7 @@ class KubernetesSwaggerDiscoveryService{
                 finalSwagger.components.schemas = {...finalSwagger.components.schemas, ...swagger.components.schemas}
             }
             
+            fastifyApp.log.info("Discovery finisched, saving swaggger with " + Object.keys(finalSwagger.components.schemas).length + " schemas and " + Object.keys(finalSwagger.paths).length + " paths")
             this.cacheService.saveAllSwaggers(JSON.stringify(finalSwagger))
             return finalSwagger;
         } catch (err) {
