@@ -37,4 +37,6 @@ jobs:
       - name: Build and push Docker image
         run: |
           docker build -t lory1990/swagger-aggregator:${{ env.TAG }} .
+          docker tag lory1990/swagger-aggregator:${{ env.TAG }} lory1990/swagger-aggregator:latest
           docker push lory1990/swagger-aggregator:${{ env.TAG }}
+          docker push lory1990/swagger-aggregator:latest

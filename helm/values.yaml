@@ -7,6 +7,7 @@ resources:
   requests:
     memory: "350Mi"
     cpu: "300m"
+    
 image: lory1990/swagger-aggregator:latest
 
 serviceAccountName: swagger-aggregator-service-account
