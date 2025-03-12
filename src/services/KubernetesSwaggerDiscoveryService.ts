@@ -71,6 +71,7 @@ class KubernetesSwaggerDiscoveryService{
                     }
                 }
             }
+            fastifyApp.log.info("Starting swagger" , finalSwagger)
             for(const swagger of allSwaggers){
                 //Working on paths
                 const prefix = swagger.prefix
@@ -178,7 +179,11 @@ class KubernetesSwaggerDiscoveryService{
             } else {
                 fastifyApp.log.error(`Failed to load openapi-configuration.json: ${String(err)}`);
             }
-            return {};
+            return {
+                openapi: '3.0.1',
+                info: { title: 'OpenAPI definition', version: 'v0' },
+                servers: [],
+            };
         }
     }
 }
