@@ -1,0 +1,17 @@
+{
+    "openapi": "3.0.3",
+    "info": {
+        "title": "Swagger Aggregator",
+        "description": "A simple swagger agrgegator for your application",
+        "version": "1.0.0",
+        "contact": {
+            "name": "Swagger aggreator support",
+            "url": "https://example.com/support",
+            "email": "support@example.com"
+        }
+    },
+    "components": {
+        "securitySchemes": {}
+    },
+    "security": []
+}

@@ -2,6 +2,13 @@ import * as k8s from '@kubernetes/client-node'
 import axios, { AxiosError } from "axios";
 import CacheService from './CacheService.js';
 import { fastifyApp } from '../index.js';
+import fs from 'fs-extra';
+import * as path from 'path';
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 class KubernetesSwaggerDiscoveryService{
 
@@ -53,13 +60,15 @@ class KubernetesSwaggerDiscoveryService{
                 }
             }
 
+            const configFromPropsConfiguration = await this.getConfigurationFromProps();
             const finalSwagger = {
-                openapi: '3.0.1',
-                info: { title: 'OpenAPI definition', version: 'v0' },
-                servers: [],
+                ...configFromPropsConfiguration,
                 paths: {},
                 components: {
-                    schemas: {}
+                    schemas: {},
+                    securitySchemes: {
+                        ...(configFromPropsConfiguration?.components?.securitySchemes || {})
+                    }
                 }
             }
             for(const swagger of allSwaggers){
@@ -146,6 +155,21 @@ class KubernetesSwaggerDiscoveryService{
             throw new Error("Path type not supported " + path.pathType)
         }
 
+    }
+
+    async getConfigurationFromProps(){
+        const configPath = path.join(__dirname, '../openapi-configuration.json');
+        try {
+            const data = fs.readFileSync(configPath, 'utf8');
+            return JSON.parse(data);
+        } catch (err) {
+            if (err instanceof Error) {
+                fastifyApp.log.error(`Failed to load openapi-configuration.json: ${err.message}`);
+            } else {
+                fastifyApp.log.error(`Failed to load openapi-configuration.json: ${String(err)}`);
+            }
+            return {};
+        }
     }
 }
 
