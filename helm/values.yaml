@@ -1,0 +1,46 @@
+replicas: 1
+
+resources:
+  limits:
+    memory: "350Mi"
+    cpu: "500m"
+  requests:
+    memory: "350Mi"
+    cpu: "300m"
+image: lory1990/swagger-aggregator:latest
+
+serviceAccountName: swagger-aggregator-service-account
+
+probes:
+  liveness:
+    active: true
+    path: "/-/healthz"
+    initialDelaySeconds: 30
+  readiness:
+      active: true
+      path: "/-/ready"
+      initialDelaySeconds: 30
+  startup:
+      active: true
+      path: "/-/check-up"
+      initialDelaySeconds: 30
+
+containerPort: 8080
+
+env:  
+  - name: DOCUMENTATION_URLS
+    value: /documentation/json
+  - name: PATHS_TO_NOT_DISCOVER
+    value: /doc
+  - name: CACHE_TIME_MS
+    value: 3600000
+  - name: CACHE_KEY_PREFIX
+    value: qwer_
+  - name: SUBPATH
+    value: /
+
+expose:
+  service: true
+
+ingress:
+  path: /doc

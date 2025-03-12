@@ -1,0 +1,5 @@
+apiVersion: v2
+name: swagger-aggregator-chart
+description: Helm chart to deploy Swagger Aggregator
+version: 0.1.0
+type: application

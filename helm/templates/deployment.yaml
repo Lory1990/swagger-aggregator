@@ -1,0 +1,114 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}
+  labels:
+    app: {{ .Release.Name }}
+    app.kubernetes.io/component: app
+    app.kubernetes.io/name: {{ .Release.Name }}
+  annotations:
+    reloader.stakater.com/auto: "true"
+spec:
+  replicas: {{ .Values.replicas }}
+  #replicas: 0
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 25%
+      maxSurge: 25%
+  revisionHistoryLimit: 1
+  progressDeadlineSeconds: 600
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}
+    spec:
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+      {{- if .Values.serviceAccountName }}
+      serviceAccountName: {{ .Values.serviceAccountName }}
+      {{- end }}
+      containers:
+        - name: {{ .Release.Name }}
+          image: {{ .Values.image }}
+          {{- if .Values.probes.liveness.active }}
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.probes.liveness.path }}
+              port: http
+              scheme: HTTP
+            initialDelaySeconds: {{ .Values.probes.liveness.initialDelaySeconds }}
+            timeoutSeconds: 30
+            periodSeconds: 30
+            successThreshold: 1
+            failureThreshold: 3
+          {{- end }}
+          {{- if .Values.probes.readiness.active }}
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.probes.readiness.path }}
+              port: http
+              scheme: HTTP
+            initialDelaySeconds: {{ .Values.probes.readiness.initialDelaySeconds }}
+            timeoutSeconds: 30
+            periodSeconds: 30
+            successThreshold: 1
+            failureThreshold: 3
+          {{- end }}
+          {{- if .Values.probes.startup.active }}
+          startupProbe:
+            httpGet:
+              path: {{ .Values.probes.startup.path }}
+              port: http
+              scheme: HTTP
+            initialDelaySeconds: {{ .Values.probes.startup.initialDelaySeconds }}
+            timeoutSeconds: 30
+            periodSeconds: 30
+            successThreshold: 1
+            failureThreshold: 3
+          {{- end }}
+          resources:
+            limits:
+              memory: "{{ .Values.resources.limits.memory }}"
+              cpu: "{{ .Values.resources.limits.cpu }}"
+            requests:
+              memory: "{{ .Values.resources.requests.memory }}"
+              cpu: "{{ .Values.resources.requests.cpu }}"
+          ports:
+            - name: http
+              containerPort: {{ .Values.containerPort }}
+              protocol: TCP
+          env:
+              - name: HTTP_PORT
+                value: "{{ .Values.containerPort }}"
+            {{- range .Values.env }}
+              - name: {{ .name }}
+                value: "{{ .value }}"
+            {{- end }}
+          envFrom:
+            {{- range .Values.environmentMaps }}
+            - configMapRef:
+                name: {{ . }}
+            {{- end }}
+            {{- range .Values.secrets }}
+            - secretRef:
+                name: {{ . }}
+            {{- end }}
+          volumeMounts:
+            {{- range .Values.configMapVolumes }}
+              - name: {{ .name }}
+                mountPath: {{ .mountPath }}
+                {{- if .subPath }}
+                subPath: {{ .subPath }}
+                {{- end }}
+                readOnly: {{ .readOnly | default true }}
+            {{- end }}
+      volumes:
+        {{- range .Values.configMapVolumes }}
+          - name: {{ .name }}
+            configMap:
+              name: {{ .name }}
+        {{- end }}
