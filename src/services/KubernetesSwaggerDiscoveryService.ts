@@ -51,7 +51,10 @@ class KubernetesSwaggerDiscoveryService{
                         if(path.path && pathsToNotDiscover.includes(path.path)) continue
                         try{
                             const swagger = await this.getSwagger(ingress, path)
-                            if(!swagger) continue
+                            if(!swagger) {
+                                fastifyApp.log.info("Cannot find swagger definitions for " + path)
+                                continue
+                            }
                             allSwaggers = [...allSwaggers, ...swagger]
                         }catch(err){
                             fastifyApp.log.error(err)
@@ -81,8 +84,12 @@ class KubernetesSwaggerDiscoveryService{
                     if(pathToHide && pathToHide.includes(path)) continue
                     realPaths[prefix + path] = swagger.paths[path]
                 }
-                finalSwagger.paths = {...finalSwagger.paths, ...realPaths}
-                finalSwagger.components.schemas = {...finalSwagger.components.schemas, ...swagger.components.schemas}
+                if(realPaths){
+                    finalSwagger.paths = {...finalSwagger.paths, ...realPaths}
+                }
+                if(swagger?.components?.schemas){
+                    finalSwagger.components.schemas = {...finalSwagger.components.schemas, ...swagger.components.schemas}
+                }
             }
             
             fastifyApp.log.info("Discovery finished, saving swaggger with " + Object.keys(finalSwagger.components.schemas).length + " schemas and " + Object.keys(finalSwagger.paths).length + " paths")
