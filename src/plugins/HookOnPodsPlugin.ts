@@ -20,13 +20,13 @@ const watchCallback = (startDate: Date, type : string, pod : any) => {
     
           const cacheKey = `deployment:${deploymentName}`;
           if (inMemoryCache.get(cacheKey)) {
-              fastifyApp.log.info(`Ignorato cambiato di stato: ${pod.status.phase} per ${deploymentName}, già registrato recentemente`);
+              fastifyApp.log.info(`Status changed ignored: ${pod.status.phase} for ${deploymentName}, already registered`);
             return;
           }
     
           inMemoryCache.set(cacheKey, true);
     
-          fastifyApp.log.info(`Pod ${pod.metadata.name} cambiato di stato: ${pod.status.phase} per deployment ${deploymentName}`);
+          fastifyApp.log.info(`Pod ${pod.metadata.name} status changed: ${pod.status.phase} for deployment ${deploymentName}`);
           
           new KubernetesSwaggerDiscoveryService().discovery();
 }

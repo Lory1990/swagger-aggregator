@@ -92,7 +92,14 @@ class KubernetesSwaggerDiscoveryService{
         }
     }
 
+    existsOnePodRunning(pods?: k8s.V1Pod[]) : boolean{
+        if(!pods || pods.length === 0 ) return false;
 
+        for(const pod in pods){
+            if(pods[pod].status?.phase === "Running") return true;
+        }
+        return false;
+    }
     async getSwagger(ingress : k8s.V1Ingress, path : k8s.V1HTTPIngressPath){
         const service = path.backend.service?.name
         if(!service) return
@@ -114,7 +121,10 @@ class KubernetesSwaggerDiscoveryService{
             const pods = await this.k8sApiCore.listNamespacedPod({ namespace, labelSelector}  );
 
             fastifyApp.log.debug(`Found ${pods.items.length} pods for service ${service} in namespace ${namespace}`);
-            if(pods.items.length == 0) return;
+            if(!this.existsOnePodRunning(pods.items)) {
+                fastifyApp.log.debug(`It seems no one is running`);
+                return;
+            }
 
             const swaggerOut = []
             const documentationUrls : string[] = (process.env.DOCUMENTATION_URLS || "/documentation/json").split(",") 
