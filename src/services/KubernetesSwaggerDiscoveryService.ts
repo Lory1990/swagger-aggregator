@@ -74,7 +74,7 @@ class KubernetesSwaggerDiscoveryService{
                     }
                 }
             }
-            fastifyApp.log.info("Starting swagger " + JSON.stringify(finalSwagger))
+            fastifyApp.log.debug("Starting swagger " + JSON.stringify(finalSwagger))
             for(const swagger of allSwaggers){
                 //Working on paths
                 const prefix = swagger.prefix
