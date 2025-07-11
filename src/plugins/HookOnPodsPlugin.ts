@@ -18,7 +18,7 @@ const watchCallback = (startDate: Date, type : string, pod : any) => {
 
           if(['Pending', 'Failed'].includes(pod.status.phase)) return;
     
-          const cacheKey = `deployment:${deploymentName}`;
+          const cacheKey = `deployment:${pod.status.phase}:${deploymentName}`;
           if (inMemoryCache.get(cacheKey)) {
               fastifyApp.log.info(`Status changed ignored: ${pod.status.phase} for ${deploymentName}, already registered`);
             return;
